@@ -1,0 +1,163 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local pgui = player:WaitForChild("PlayerGui")
+
+-- Nettoyage pour éviter les doublons
+if pgui:FindFirstChild("KZR_Menu") then pgui.KZR_Menu:Destroy() end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "KZR_Menu"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = pgui
+
+-- Fenêtre Principale (Thème Rouge Sombre)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 5, 5) 
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 15) 
+mainCorner.Parent = mainFrame
+
+-- Titre : KZR Lagger V1
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 45)
+title.Position = UDim2.new(0, 15, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "KZR Lagger V1"
+title.TextColor3 = Color3.fromRGB(255, 50, 50) 
+title.TextSize = 18
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = mainFrame
+
+-- Bouton Fermer (Cercle Rouge)
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 13, 0, 13)
+closeBtn.Position = UDim2.new(1, -28, 0, 16)
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeBtn.Text = ""
+closeBtn.Parent = mainFrame
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+
+--- BOUTON 1 : Start / Stop Lagging
+local lagBtn = Instance.new("TextButton")
+lagBtn.Size = UDim2.new(0, 270, 0, 55)
+lagBtn.Position = UDim2.new(0.5, -135, 0, 55)
+lagBtn.BackgroundColor3 = Color3.fromRGB(25, 10, 10) 
+lagBtn.Text = "Start Lagging"
+lagBtn.TextColor3 = Color3.fromRGB(120, 60, 60) 
+lagBtn.Font = Enum.Font.GothamBold
+lagBtn.TextSize = 18
+lagBtn.Parent = mainFrame
+Instance.new("UICorner", lagBtn).CornerRadius = UDim.new(0, 12)
+
+--- BOUTON 2 : Speed Boost ON / OFF
+local speedBtn = Instance.new("TextButton")
+speedBtn.Size = UDim2.new(0, 270, 0, 55)
+speedBtn.Position = UDim2.new(0.5, -135, 0, 115)
+speedBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0) 
+speedBtn.Text = "Speed Boost : OFF"
+speedBtn.TextColor3 = Color3.fromRGB(255, 150, 150) 
+speedBtn.Font = Enum.Font.GothamBold
+speedBtn.TextSize = 18
+speedBtn.Parent = mainFrame
+Instance.new("UICorner", speedBtn).CornerRadius = UDim.new(0, 12)
+
+-- Footer Gauche (Discord KZR)
+local footerLeft = Instance.new("TextLabel")
+footerLeft.Size = UDim2.new(0, 100, 0, 20)
+footerLeft.Position = UDim2.new(0, 15, 1, -25)
+footerLeft.BackgroundTransparency = 1
+footerLeft.Text = "Discord: KZR"
+footerLeft.TextColor3 = Color3.fromRGB(150, 50, 50)
+footerLeft.TextSize = 11
+footerLeft.Font = Enum.Font.Gotham
+footerLeft.TextXAlignment = Enum.TextXAlignment.Left
+footerLeft.Parent = mainFrame
+
+-- Footer Droite (Lien)
+local footerRight = Instance.new("TextLabel")
+footerRight.Size = UDim2.new(0, 150, 0, 20)
+footerRight.Position = UDim2.new(1, -165, 1, -25)
+footerRight.BackgroundTransparency = 1
+footerRight.Text = "discord.gg/jPsPEVcB7n"
+footerRight.TextColor3 = Color3.fromRGB(255, 80, 80)
+footerRight.TextSize = 11
+footerRight.Font = Enum.Font.Gotham
+footerRight.TextXAlignment = Enum.TextXAlignment.Right
+footerRight.Parent = mainFrame
+
+--- SYSTÈME DE DÉPLACEMENT (Drag)
+local dragging, dragInput, dragStart, startPos
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true; dragStart = input.Position; startPos = mainFrame.Position
+        input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- === LOGIQUE ===
+
+closeBtn.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+
+-- Speed Boost ON/OFF
+local speedActive = false
+speedBtn.MouseButton1Click:Connect(function()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hum = char:FindFirstChild("Humanoid")
+    if hum then
+        speedActive = not speedActive
+        if speedActive then
+            hum.WalkSpeed = 150
+            speedBtn.Text = "Speed Boost : ON"
+            speedBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        else
+            hum.WalkSpeed = 16
+            speedBtn.Text = "Speed Boost : OFF"
+            speedBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+        end
+    end
+end)
+
+-- Lagging (2s puis désactivation auto)
+local isLagging = false
+lagBtn.MouseButton1Click:Connect(function()
+    if isLagging then return end
+
+    isLagging = true
+    lagBtn.Text = "Stop Lagging"
+    lagBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    lagBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+    task.spawn(function()
+        -- Lag FPS (< 1 FPS)
+        for i = 1, 2 do
+            local t = os.clock()
+            while os.clock() - t < 0.96 do
+                -- Bloque le client pour simuler le lag
+            end
+            task.wait()
+        end
+
+        -- Retour à la normale automatique
+        isLagging = false
+        lagBtn.Text = "Start Lagging"
+        lagBtn.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
+        lagBtn.TextColor3 = Color3.fromRGB(120, 60, 60)
+    end)
+end)
